@@ -8,15 +8,15 @@ import { ActivatedRoute } from '@angular/router';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent implements OnInit {
-  token: string | null = null;
+export class HomeComponent {//implements OnInit {
+  // token: string | null = null;
 
-  constructor(private route: ActivatedRoute) {}
+  // constructor(private route: ActivatedRoute) {}
 
-  ngOnInit(): void {
-    this.token = this.route.snapshot.queryParamMap.get('token');
-    if (this.token) {
-      localStorage.setItem('access_token', this.token); // Stocke le token localement
-    }
-  }
+  // ngOnInit(): void {
+  //   this.token = this.route.snapshot.queryParamMap.get('token');
+  //   if (this.token) {
+  //     localStorage.setItem('access_token', this.token);
+  //   }
+  // }
 }

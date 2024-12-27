@@ -21,7 +21,7 @@ export class PlaylistComponent implements OnInit {
     this.playlistService.getPlaylists().subscribe({
       next: (data) => {
         console.log('Playlists received:', data);
-        this.playlists = data.playlists;
+        this.playlists = data;
       },
       error: (err) => {
         this.errorMessage = 'Une erreur est survenue lors du chargement des playlists.';

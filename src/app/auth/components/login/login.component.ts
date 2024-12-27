@@ -11,17 +11,15 @@ export class LoginComponent {
   constructor(private http: HttpClient) {}
 
   loginWithSpotify(): void {
-    // Appeler l'endpoint /auth/login simulé par le mock
-    this.http.post('/auth/login', {}).subscribe({
-      next: (response: any) => {
-        console.log('Login successful:', response);
-        // Si nécessaire, rediriger après une réponse réussie
-        // Exemple : localStorage.setItem('token', response.token);
-        window.location.href = '/playlists';
-      },
-      error: (err) => {
-        console.error('Login failed:', err);
-      },
-    });
+    // this.http.get('http://localhost:8080/spotify/login', { responseType: 'text' }).subscribe({
+    //   next: (response: any) => {
+    //     console.log('Login successful:', response);
+    //     window.location.href = '/home'; 
+    //   },
+    //   error: (err) => {
+    //     console.error('Login failed:', err);
+    //   },
+    // });
+    window.location.href = 'http://localhost:8080/spotify/login';
   }
 }

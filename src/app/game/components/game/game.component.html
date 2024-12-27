@@ -1,0 +1,24 @@
+<div class="game-container">
+    <h1>Blindtest</h1>
+  
+    <label for="playlistId">ID de la playlist :</label>
+    <input
+      id="playlistId"
+      type="text"
+      [(ngModel)]="playlistId"
+      placeholder="Entrez l'ID de la playlist"
+    />
+  
+    <div class="actions">
+      <button (click)="startBlindTest()">Démarrer</button>
+      <button (click)="pauseBlindTest()">Mettre en pause</button>
+      <button (click)="resumeBlindTest()">Reprendre</button>
+      <button (click)="stopBlindTest()">Arrêter</button>
+    </div>
+  
+    <div class="status">
+      <p><strong>Statut :</strong> {{ blindTestStatus }}</p>
+      <p *ngIf="currentSong"><strong>Chanson en cours :</strong> {{ currentSong }}</p>
+    </div>
+  </div>
+  

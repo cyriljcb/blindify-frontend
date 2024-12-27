@@ -6,13 +6,9 @@ import { Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class PlaylistService {
-  private baseUrl = '/spotify'; // Utilisation d'un chemin relatif
-
-
   constructor(private http: HttpClient) {}
 
-  // Récupérer les playlists
   getPlaylists(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/playlists`);
+    return this.http.get('/spotify/playlists');
   }
 }
