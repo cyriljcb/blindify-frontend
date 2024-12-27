@@ -9,6 +9,6 @@ export class SpotifyService {
   constructor(private http: HttpClient) {}
 
   getPlaylists(): Observable<any> {
-    return this.http.get('/api/spotify/playlists'); // Cette URL sera interceptée par le mock
+    return this.http.get('/spotify/playlists'); // Cette URL sera interceptée par le mock
   }
 }

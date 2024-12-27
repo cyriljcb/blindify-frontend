@@ -14,36 +14,40 @@ export class SpotifyMockInterceptor implements HttpInterceptor {
     req: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
+    // Log pour vérifier si l'intercepteur capture la requête
+    console.log('Intercepted request:', req.url);
+
+
     // Mock pour récupérer une liste de playlists
-    if (req.url === '/api/spotify/playlists') {
+    if (req.url === '/spotify/playlists') {
       const mockPlaylists = {
         playlists: [
           {
-            id: '1',
-            name: 'Hits 2023',
-            tracks: [
-              { id: 't1', title: 'Song 1', artist: 'Artist 1' },
-              { id: 't2', title: 'Song 2', artist: 'Artist 2' },
-            ],
+            id: '3sPP4AKZEKKatQ4R79U5mf',
+            name: 'Twenty One',
+            songs: [], // Si nécessaire, ajoutez des chansons ici
+            banner:
+              'https://mosaic.scdn.co/640/ab67616d00001e022df0d98a423025032d0db1f7ab67616d00001e029cf15c7323fb85b7112197d5ab67616d00001e02ca964f2c3c069b3fb9ec11beab67616d00001e02d1d301e737da4324479c6660',
           },
           {
             id: '2',
             name: 'Classiques 90s',
-            tracks: [
-              { id: 't3', title: 'Song 3', artist: 'Artist 3' },
-              { id: 't4', title: 'Song 4', artist: 'Artist 4' },
-            ],
+            songs: [], // Exemple vide pour une autre playlist
+            banner:
+              'https://mosaic.scdn.co/640/ab67616d00001e022df0d98a423025032d0db1f7ab67616d00001e029cf15c7323fb85b7112197d5ab67616d00001e02ca964f2c3c069b3fb9ec11beab67616d00001e02d1d301e737da4324479c6660',
           },
         ],
       };
+      console.log('Mock playlists response:', mockPlaylists);
       return of(new HttpResponse({ status: 200, body: mockPlaylists }));
     }
 
     // Mock pour le login
-    if (req.url === 'http://localhost:8080/spotify/login') {
+    if (req.url.includes('/auth/login')) {
+      console.log('Mock intercepted /auth/login');
       const mockLoginResponse = {
         message: 'Login successful',
-        token: 'mock-access-token', // Token simulé
+        token: 'mock-access-token', // Simulated token
       };
       return of(new HttpResponse({ status: 200, body: mockLoginResponse }));
     }
@@ -54,11 +58,14 @@ export class SpotifyMockInterceptor implements HttpInterceptor {
       const mockPlaylistDetails = {
         id: playlistId,
         name: `Playlist ${playlistId}`,
-        tracks: [
+        songs: [
           { id: 't1', title: 'Song 1', artist: 'Artist 1' },
           { id: 't2', title: 'Song 2', artist: 'Artist 2' },
         ],
+        banner:
+          'https://mosaic.scdn.co/640/ab67616d00001e022df0d98a423025032d0db1f7ab67616d00001e029cf15c7323fb85b7112197d5ab67616d00001e02ca964f2c3c069b3fb9ec11beab67616d00001e02d1d301e737da4324479c6660',
       };
+      
       return of(new HttpResponse({ status: 200, body: mockPlaylistDetails }));
     }
 

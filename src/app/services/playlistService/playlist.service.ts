@@ -6,7 +6,8 @@ import { Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class PlaylistService {
-  private baseUrl = 'http://localhost:8080/spotify'; // URL de l'API backend
+  private baseUrl = '/spotify'; // Utilisation d'un chemin relatif
+
 
   constructor(private http: HttpClient) {}
 

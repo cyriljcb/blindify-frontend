@@ -1,20 +1,27 @@
 import { Component } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
   standalone: false,
-  
   templateUrl: './login.component.html',
-  styleUrl: './login.component.scss'
+  styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent {
-  constructor() {}
+  constructor(private http: HttpClient) {}
 
   loginWithSpotify(): void {
-    // URL de l'endpoint backend qui initie l'authentification OAuth Spotify
-    const spotifyLoginUrl = 'http://localhost:8080/spotify/login';
-    
-    // Redirection de l'utilisateur vers l'URL
-    window.location.href = spotifyLoginUrl;
+    // Appeler l'endpoint /auth/login simulé par le mock
+    this.http.post('/auth/login', {}).subscribe({
+      next: (response: any) => {
+        console.log('Login successful:', response);
+        // Si nécessaire, rediriger après une réponse réussie
+        // Exemple : localStorage.setItem('token', response.token);
+        window.location.href = '/playlists';
+      },
+      error: (err) => {
+        console.error('Login failed:', err);
+      },
+    });
   }
 }
