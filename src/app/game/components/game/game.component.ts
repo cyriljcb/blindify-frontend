@@ -1,21 +1,24 @@
 import { Component, OnDestroy } from '@angular/core';
-import { Subscription, interval } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { BlindTestService } from '../../../services/blindTestService/blind-test.service';
+import { WebSocketService } from '../../../services/webSocketService/web-socket.service';
 
 @Component({
   selector: 'app-game',
   standalone: false,
   templateUrl: './game.component.html',
-  styleUrl: './game.component.scss'
-  
+  styleUrls: ['./game.component.scss'],
 })
 export class GameComponent implements OnDestroy {
   playlistId: string = ''; // ID de la playlist
   blindTestStatus: string = ''; // Statut du blindtest
   currentSong: string | null = null; // Chanson en cours
-  blindTestSubscription: Subscription | null = null;
+  private socketSubscription: Subscription | null = null;
 
-  constructor(private blindTestService: BlindTestService) {}
+  constructor(
+    private blindTestService: BlindTestService,
+    private webSocketService: WebSocketService
+  ) {}
 
   // Démarre le blindtest
   startBlindTest() {
@@ -27,7 +30,7 @@ export class GameComponent implements OnDestroy {
     this.blindTestService.startBlindTest(this.playlistId).subscribe(
       (response: string) => {
         this.blindTestStatus = response;
-        this.pollCurrentSong();
+        this.subscribeToSongUpdates(); // Écouter les mises à jour via WebSocket
       },
       (error) => {
         console.error('Erreur lors du démarrage du blindtest :', error);
@@ -68,7 +71,7 @@ export class GameComponent implements OnDestroy {
       (response: string) => {
         this.blindTestStatus = response;
         this.currentSong = null;
-        this.unsubscribePolling();
+        this.unsubscribeFromSongUpdates();
       },
       (error) => {
         console.error('Erreur lors de l\'arrêt :', error);
@@ -77,34 +80,37 @@ export class GameComponent implements OnDestroy {
     );
   }
 
-  // Vérifie la chanson actuelle en cours (polling)
-  pollCurrentSong() {
-    this.unsubscribePolling();
+  // S'abonner aux mises à jour des chansons via WebSocket
+  private subscribeToSongUpdates() {
+    this.unsubscribeFromSongUpdates(); // Arrête toute souscription précédente
 
-    this.blindTestSubscription = interval(2000).subscribe(() => {
-      this.blindTestService.getCurrentSong().subscribe(
-        (data: any) => {
-          this.currentSong = data?.songName
-            ? `${data.songName} - ${data.artistName}`
-            : null;
-        },
-        (error) => {
-          console.error('Erreur lors du polling de la chanson actuelle :', error);
-        }
-      );
-    });
+    this.webSocketService.connect();
+    this.socketSubscription = new Subscription();
+
+    const songSubscription = this.webSocketService.subscribe(
+      '/topic/song',
+      (message: any) => {
+        this.currentSong = message?.songName
+          ? `${message.songName} - ${message.artistName}`
+          : null;
+      }
+    );
+
+    this.socketSubscription.add(songSubscription);
   }
 
-  // Arrête le polling
-  unsubscribePolling() {
-    if (this.blindTestSubscription) {
-      this.blindTestSubscription.unsubscribe();
-      this.blindTestSubscription = null;
+  // Arrêter l'écoute des mises à jour
+  private unsubscribeFromSongUpdates() {
+    if (this.socketSubscription) {
+      this.socketSubscription.unsubscribe();
+      this.socketSubscription = null;
     }
+
+    this.webSocketService.disconnect();
   }
 
   // Nettoie les souscriptions à la destruction du composant
   ngOnDestroy() {
-    this.unsubscribePolling();
+    this.unsubscribeFromSongUpdates();
   }
 }

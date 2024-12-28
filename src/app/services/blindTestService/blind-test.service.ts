@@ -10,23 +10,32 @@ export class BlindTestService {
 
   constructor(private http: HttpClient) {}
 
+  // Démarrer le blind test
   startBlindTest(playlistId: string) {
-    return this.http.get(`${this.apiUrl}/blindtest/sequence?playlistId=${playlistId}`, { responseType: 'text' });
+    return this.http.get(
+      `${this.apiUrl}/blindtest/sequence?playlistId=${playlistId}`,
+      { responseType: 'text' }
+    );
   }
 
+  // Mettre en pause
   pauseBlindTest() {
-    return this.http.put(`${this.apiUrl}/blindtest/pause`, null, { responseType: 'text' });
+    return this.http.put(`${this.apiUrl}/blindtest/pause`, null, {
+      responseType: 'text',
+    });
   }
 
+  // Reprendre
   resumeBlindTest() {
-    return this.http.put(`${this.apiUrl}/blindtest/resume`, null, { responseType: 'text' });
+    return this.http.put(`${this.apiUrl}/blindtest/resume`, null, {
+      responseType: 'text',
+    });
   }
 
+  // Arrêter
   stopBlindTest() {
-    return this.http.put(`${this.apiUrl}/blindtest/stop`, null, { responseType: 'text' });
-  }
-
-  getCurrentSong() {
-    return this.http.get(`${this.apiUrl}/spotify/player/current`);
+    return this.http.put(`${this.apiUrl}/blindtest/stop`, null, {
+      responseType: 'text',
+    });
   }
 }
