@@ -1,24 +1,35 @@
 <div class="game-container">
-    <h1>Blindtest</h1>
-  
-    <label for="playlistId">ID de la playlist :</label>
-    <input
-      id="playlistId"
-      type="text"
-      [(ngModel)]="playlistId"
-      placeholder="Entrez l'ID de la playlist"
-    />
-  
-    <div class="actions">
-      <button (click)="startBlindTest()">Démarrer</button>
-      <button (click)="pauseBlindTest()">Mettre en pause</button>
-      <button (click)="resumeBlindTest()">Reprendre</button>
-      <button (click)="stopBlindTest()">Arrêter</button>
-    </div>
-  
-    <div class="status">
-      <p><strong>Statut :</strong> {{ blindTestStatus }}</p>
-      <p *ngIf="currentSong"><strong>Chanson en cours :</strong> {{ currentSong }}</p>
-    </div>
+  <h1>Blindtest 🎵</h1>
+
+  <label for="playlistId">ID de la playlist :</label>
+  <input
+    id="playlistId"
+    type="text"
+    [(ngModel)]="playlistId"
+    placeholder="Entrez l'ID de la playlist"
+    class="input-field"
+  />
+
+  <div class="actions">
+    <button (click)="startBlindTest()">Démarrer</button>
+    <button (click)="pauseBlindTest()">Mettre en pause</button>
+    <button (click)="resumeBlindTest()">Reprendre</button>
+    <button (click)="stopBlindTest()">Arrêter</button>
   </div>
-  
+
+  <div class="status">
+    <p><strong>Statut :</strong> {{ blindTestStatus }}</p>
+  </div>
+
+  <div class="display">
+    <ng-container *ngIf="!isReveal; else revealTemplate">
+      <p class="chrono"><strong>{{ currentSecond }}</strong></p>
+    </ng-container>
+    <ng-template #revealTemplate>
+      <div class="reveal">
+        <h1>{{ currentSong || '...' }}</h1>
+        <h2>{{ artistName || '...' }}</h2>
+      </div>
+    </ng-template>
+  </div>
+</div>
