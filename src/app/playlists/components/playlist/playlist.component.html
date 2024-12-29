@@ -1,20 +1,20 @@
 <div class="playlist-container">
   <h1>Vos Playlists Spotify</h1>
 
-  <!-- Affichage d'un message d'erreur -->
   <div *ngIf="errorMessage" class="error">
     <p>{{ errorMessage }}</p>
   </div>
 
-  <!-- Affichage d'un message de chargement si aucune playlist n'est chargée -->
   <div *ngIf="!errorMessage && playlists.length === 0" class="loading">
     <p>Chargement des playlists...</p>
   </div>
 
-  <!-- Liste des playlists -->
   <div *ngIf="playlists.length > 0" class="playlist-list">
-    <div *ngFor="let playlist of playlists" class="playlist-item">
-      <!-- Affichage de l'image de la playlist ou d'une image par défaut -->
+    <div 
+      *ngFor="let playlist of playlists" 
+      class="playlist-item" 
+      (click)="selectPlaylist(playlist.id)"
+    >
       <img 
         [src]="playlist.banner || 'assets/default-banner.jpg'" 
         alt="{{ playlist.name }}" 

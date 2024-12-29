@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { PlaylistService } from '../../../services/playlistService/playlist.service';
 
 @Component({
@@ -8,6 +8,7 @@ import { PlaylistService } from '../../../services/playlistService/playlist.serv
   styleUrls: ['./playlist.component.scss'], // Corrigé 'styleUrl' en 'styleUrls'
 })
 export class PlaylistComponent implements OnInit {
+  @Output() playlistSelected = new EventEmitter<string>();
   playlists: { id: string; name: string; banner: string | null; tracks: any[] }[] = [];
   errorMessage: string | null = null;
 
@@ -28,5 +29,8 @@ export class PlaylistComponent implements OnInit {
         console.error(err);
       },
     });
+  }
+  selectPlaylist(playlistId: string): void {
+    this.playlistSelected.emit(playlistId);
   }
 }

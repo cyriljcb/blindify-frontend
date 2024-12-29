@@ -1,14 +1,34 @@
 <div class="game-container">
   <h1>Blindtest 🎵</h1>
 
-  <label for="playlistId">ID de la playlist :</label>
-  <input
-    id="playlistId"
-    type="text"
-    [(ngModel)]="playlistId"
-    placeholder="Entrez l'ID de la playlist"
-    class="input-field"
-  />
+  <div class="playlist-selection-toggle">
+    <button (click)="togglePlaylistSelector()">
+      {{ isPlaylistSelectorVisible ? 'Fermer la sélection de playlist' : 'Choisir une playlist' }}
+    </button>
+  </div>
+
+  <div
+    class="playlist-selection"
+    *ngIf="isPlaylistSelectorVisible"
+  >
+    <h2>Choisissez une playlist :</h2>
+
+    <div class="playlist-list">
+      <div
+        *ngFor="let playlist of playlists"
+        class="playlist-item"
+        (click)="selectPlaylist(playlist.id)"
+        [class.selected]="playlist.id === playlistId"
+      >
+        <img
+          [src]="playlist.banner || 'assets/default-banner.jpg'"
+          [alt]="playlist.name"
+          class="playlist-banner"
+        />
+        <h3>{{ playlist.name }}</h3>
+      </div>
+    </div>
+  </div>
 
   <div class="actions">
     <button (click)="startBlindTest()">Démarrer</button>

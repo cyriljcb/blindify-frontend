@@ -8,52 +8,59 @@ import SockJS from 'sockjs-client';
 })
 export class WebSocketService {
   private stompClient: Stomp.Client | null = null;
+  private connected: boolean = false; // Propriété isConnected
 
   constructor() {}
+
+  // Getter pour la propriété isConnected
+  isConnected(): boolean {
+    return this.connected;
+  }
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       const socket = new SockJS('http://localhost:8080/ws');
-      socket.onopen = () => console.log('SockJS ouvert');
-      socket.onerror = (err) => {
-        console.error('Erreur SockJS :', err);
-        reject(err);
-      };
-  
+
       this.stompClient = new Stomp.Client({
         webSocketFactory: () => socket,
         debug: (str) => console.log(str),
         reconnectDelay: 5000,
       });
-  
+
       this.stompClient.onConnect = () => {
         console.log('WebSocket connecté');
+        this.connected = true; // Mise à jour de l'état de connexion
         resolve();
       };
-  
+
       this.stompClient.onStompError = (frame) => {
         console.error('Erreur WebSocket : ', frame.headers['message']);
         console.error('Détails : ', frame.body);
+        this.connected = false; // État désactivé en cas d'erreur
         reject(new Error(frame.headers['message']));
       };
-  
+
+      this.stompClient.onDisconnect = () => {
+        console.log('WebSocket déconnecté');
+        this.connected = false; // Mise à jour de l'état
+      };
+
       this.stompClient.activate();
     });
   }
-  
-  
+
   subscribe(topic: string, callback: (message: any) => void): Subscription {
     if (!this.stompClient) {
       console.warn('WebSocket non initialisé.');
       return new Subscription();
     }
-  
-    if (this.stompClient.connected) {
+
+    if (this.isConnected()) {
       return this.internalSubscribe(topic, callback);
     } else {
       console.warn('WebSocket non connecté. Abonnement différé.');
       const interval = setInterval(() => {
-        if (this.stompClient && this.stompClient.connected) {
+        if (this.isConnected()) {
           clearInterval(interval);
           this.internalSubscribe(topic, callback);
         }
@@ -61,7 +68,7 @@ export class WebSocketService {
       return new Subscription();
     }
   }
-  
+
   private internalSubscribe(topic: string, callback: (message: any) => void): Subscription {
     const subscription = this.stompClient!.subscribe(topic, (response) => {
       try {
@@ -72,17 +79,16 @@ export class WebSocketService {
         console.error('Erreur lors du parsing du message WebSocket :', response.body, e);
       }
     });
-  
+
     return new Subscription(() => {
       subscription.unsubscribe();
     });
   }
-  
-  // Méthode pour envoyer un message au backend via WebSocket
+
   sendMessage(destination: string, message: any): void {
-    if (this.stompClient && this.stompClient.connected) {
+    if (this.isConnected()) {
       try {
-        this.stompClient.publish({
+        this.stompClient!.publish({
           destination: destination,
           body: JSON.stringify(message),
         });
@@ -95,11 +101,11 @@ export class WebSocketService {
     }
   }
 
-  // Déconnexion
   disconnect(): void {
     if (this.stompClient) {
-      this.stompClient.deactivate(); // Arrêter la connexion
+      this.stompClient.deactivate();
       console.log('WebSocket déconnecté');
+      this.connected = false; // Mise à jour de l'état de connexion
     }
   }
 }

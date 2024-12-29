@@ -1,45 +1,53 @@
+body {
+  background-color: #121212; /* Couleur de fond sombre pour un écran */
+  color: #fff; /* Texte en blanc pour un bon contraste */
+  font-family: Arial, sans-serif;
+}
+
 .game-container {
   text-align: center;
-  margin: 20px auto;
-  padding: 20px;
-  max-width: 600px;
-  background-color: #f9f9f9;
-  border-radius: 10px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  margin: 40px auto;
+  padding: 40px;
+  max-width: 90%; 
+  background-color: #1e1e1e; /* Couleur sombre pour éviter la fatigue visuelle */
+  border-radius: 20px;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.7);
 }
 
 h1 {
-  font-size: 36px;
-  color: #333;
-  margin-bottom: 20px;
+  font-size: 80px; /* Texte très grand pour la lisibilité */
+  color: #f1f1f1;
+  margin-bottom: 40px;
 }
 
 label {
   display: block;
-  font-size: 18px;
-  margin-bottom: 10px;
-  color: #555;
+  font-size: 36px; /* Texte agrandi */
+  margin-bottom: 20px;
+  color: #bbb;
 }
 
 .input-field {
-  width: 80%;
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  margin-bottom: 20px;
+  width: 60%;
+  padding: 20px;
+  font-size: 28px; /* Texte plus grand */
+  border: 1px solid #555;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  background-color: #2e2e2e;
+  color: #fff;
 }
 
 .actions {
-  margin: 20px 0;
+  margin: 40px 0;
 
   button {
-    margin: 5px 10px;
-    padding: 10px 20px;
-    font-size: 16px;
+    margin: 10px 20px;
+    padding: 20px 40px; /* Boutons plus grands */
+    font-size: 28px; /* Texte des boutons agrandi */
     cursor: pointer;
     border: none;
-    border-radius: 5px;
+    border-radius: 10px;
     background-color: #007bff;
     color: white;
     transition: background-color 0.3s;
@@ -49,41 +57,106 @@ label {
     }
 
     &:disabled {
-      background-color: #ccc;
+      background-color: #555;
       cursor: not-allowed;
     }
   }
 }
 
 .status {
-  margin: 20px 0;
+  margin: 40px 0;
 
   p {
-    font-size: 18px;
-    margin: 5px 0;
-    color: #666;
+    font-size: 36px; /* Texte status agrandi */
+    margin: 10px 0;
+    color: #999;
   }
 }
 
 .chrono {
-  font-size: 80px;
+  font-size: 150px; /* Chronomètre bien visible */
   font-weight: bold;
   color: #ff5722;
-  margin: 20px 0;
+  margin: 40px 0;
 }
 
 .reveal {
-  margin-top: 20px;
+  margin-top: 40px;
 
   h1 {
-    font-size: 50px;
+    font-size: 70px; /* Titre de la révélation en grand */
     color: #4caf50;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
   }
 
   h2 {
-    font-size: 30px;
+    font-size: 50px; /* Nom de l'artiste en grand */
     color: #2196f3;
     margin: 0;
   }
+}
+
+.playlist-selection {
+  margin-bottom: 40px;
+
+  &.hidden {
+    display: none;
+  }
+
+  .playlist-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; 
+    gap: 30px;
+
+    .playlist-item {
+      cursor: pointer;
+      border: 3px solid transparent;
+      padding: 20px;
+      text-align: center;
+      width: 200px; /* Plus grand pour les écrans */
+      transition: border-color 0.3s;
+      background-color: #2e2e2e;
+      border-radius: 10px;
+
+      &.selected {
+        border-color: #007bff;
+      }
+
+      img.playlist-banner {
+        width: 100%;
+        height: 150px; /* Images plus grandes */
+        object-fit: cover;
+        margin-bottom: 20px;
+        border-radius: 10px;
+      }
+
+      h3 {
+        font-size: 24px; /* Texte des playlists plus grand */
+        color: #f1f1f1;
+      }
+    }
+  }
+}
+
+.playlist-selection-toggle button {
+  margin-bottom: 30px;
+  padding: 30px 60px; /* Bouton plus large et plus haut */
+  font-size: 32px; /* Texte agrandi */
+  cursor: pointer;
+  border: none;
+  border-radius: 10px;
+  background-color: #28a745;
+  color: white;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #218838;
+  }
+}
+
+.playlist-selection h2 {
+  font-size: 36px; /* Taille du texte du label */
+  color: #fff; /* Couleur blanche */
+  margin-bottom: 20px;
 }

@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { WebSocketService } from '../../../services/webSocketService/web-socket.service';
 import { HttpClient } from '@angular/common/http';
+import { PlaylistService } from '../../../services/playlistService/playlist.service';
 
 @Component({
   selector: 'app-game',
@@ -12,26 +13,54 @@ import { HttpClient } from '@angular/common/http';
 export class GameComponent implements OnInit, OnDestroy {
   playlistId: string = '';
   blindTestStatus: string = '';
+  playlists: { id: string; name: string; banner: string | null }[] = [];
   currentSong: string | null = null;
   artistName: string | null = null;
-  currentSecond: number = 20; // Durée initiale du chrono
-  isReveal: boolean = false; // Indique si on est en mode "reveal"
-  private timerInterval: any = null; // Référence pour le setInterval
+  currentSecond: number = 20;
+  isReveal: boolean = false;
+  isPlaylistSelectorVisible: boolean = false; // Contrôle l'affichage de la sélection des playlists
+  private timerInterval: any = null;
   private socketSubscription: Subscription | null = null;
 
   constructor(
     private webSocketService: WebSocketService,
     private cdr: ChangeDetectorRef,
-    private http: HttpClient
+    private http: HttpClient,
+    private playlistService: PlaylistService
   ) {}
 
   ngOnInit() {
+    this.fetchPlaylists();
     this.webSocketService.connect();
   }
 
   ngOnDestroy() {
     this.clearTimer();
     this.unsubscribeFromSongUpdates();
+  }
+
+  fetchPlaylists(): void {
+    this.playlistService.getPlaylists().subscribe({
+      next: (data) => {
+        console.log('Playlists received:', data);
+        this.playlists = data;
+      },
+      error: (err) => {
+        this.blindTestStatus = 'Une erreur est survenue lors du chargement des playlists.';
+        console.error(err);
+      },
+    });
+  }
+
+  togglePlaylistSelector() {
+    this.isPlaylistSelectorVisible = !this.isPlaylistSelectorVisible;
+  }
+
+  selectPlaylist(playlistId: string) {
+    this.playlistId = playlistId;
+    this.blindTestStatus = `Playlist sélectionnée : ${
+      this.playlists.find((p) => p.id === playlistId)?.name || ''
+    }`;
   }
 
   startBlindTest() {
@@ -83,10 +112,9 @@ export class GameComponent implements OnInit, OnDestroy {
   
     const playNextSong = () => {
       if (currentIndex >= playlist.length) {
-        // Aucun morceau restant, arrêter le blind test
         this.blindTestStatus = 'Blind test terminé.';
         console.log('Fin du blind test, arrêt de la musique.');
-        this.webSocketService.sendMessage('/app/blindtest/action', { command: 'stop' }); 
+        this.webSocketService.sendMessage('/app/blindtest/action', { command: 'stop' });
         return;
       }
   
@@ -95,50 +123,45 @@ export class GameComponent implements OnInit, OnDestroy {
   
       console.log('Lecture de la chanson : ', song);
   
-      // Envoyer la commande au backend pour jouer la chanson
       this.webSocketService.sendMessage('/app/blindtest/action', { command: 'play', songId: song.id });
   
-      // Lancer le timer pour le début de la chanson
       this.startTimer(20, () => {
         console.log('Timer terminé, préparation pour le reveal');
   
-        // Arrêter la lecture de la chanson
         this.webSocketService.sendMessage('/app/blindtest/action', { command: 'stop', songId: song.id });
   
-        // Révéler les détails de la chanson après une pause d'une seconde
         setTimeout(() => {
           console.log('Reveal de la chanson');
           this.revealSongDetails(song);
   
-          // Lecture du refrain après une seconde
           setTimeout(() => {
             console.log('Lecture du refrain');
             this.webSocketService.sendMessage('/app/blindtest/action', { command: 'playAtRefrain', songId: song.id });
   
-            // Passer à la chanson suivante après un délai
             setTimeout(() => {
-              console.log('Passage à la chanson suivante');
+              console.log('Passage à la chanson suivante après un délai.');
+              
               currentIndex++;
-              playNextSong(); // Passer à la chanson suivante
+  
+              setTimeout(() => {
+                playNextSong(); // Passer à la chanson suivante
+              }, 2000); // 3 secondes de transition entre deux chansons
+  
             }, 15000); // Temps pour le refrain
           }, 1000); // Délai après le reveal
-        }, 1000); // Délai avant le reveal
+        }, 2000); // Délai avant le reveal
       });
     };
   
     playNextSong();
   }
   
-  
-  
-  
-  
 
   private startTimer(seconds: number, onComplete: () => void) {
     this.clearTimer();
     this.currentSecond = seconds;
     this.isReveal = false;
-  
+
     this.timerInterval = setInterval(() => {
       if (this.currentSecond > 0) {
         this.currentSecond--;
@@ -146,10 +169,9 @@ export class GameComponent implements OnInit, OnDestroy {
         this.clearTimer();
         onComplete();
       }
-      this.cdr.detectChanges(); // Mise à jour explicite de l'interface
+      this.cdr.detectChanges();
     }, 1000);
   }
-  
 
   private clearTimer() {
     if (this.timerInterval) {
@@ -160,7 +182,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
   private revealSongDetails(song: any) {
     this.isReveal = true;
-    this.currentSong = song.name || 'Chanson inconnue';
+    this.currentSong = song.songName || 'Chanson inconnue';
     this.artistName = song.artistName || 'Artiste inconnu';
   }
 
@@ -169,7 +191,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.isReveal = false;
     this.clearTimer();
 
-    this.webSocketService.sendMessage('/app/blindtest/pause', { action: 'pause' });
+    this.webSocketService.sendMessage('/app/blindtest/pause', { action: 'stop' });
   }
 
   resumeBlindTest() {
@@ -180,17 +202,22 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   stopBlindTest() {
+    console.log('Arrêt du blind test.');
+  
     this.blindTestStatus = 'Blind test arrêté.';
     this.isReveal = false;
     this.currentSong = null;
     this.artistName = null;
-
+  
     this.clearTimer();
+  
+    if (this.webSocketService.isConnected()) {
+      this.webSocketService.sendMessage('/app/blindtest/action', { action: 'stop' });
+      console.log('Message envoyé au backend pour arrêter le blind test.');
+    }
+  
     this.unsubscribeFromSongUpdates();
-
-    this.webSocketService.sendMessage('/app/blindtest/stop', { action: 'stop' });
   }
-
   private unsubscribeFromSongUpdates() {
     if (this.socketSubscription) {
       this.socketSubscription.unsubscribe();
