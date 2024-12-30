@@ -1,6 +1,5 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { WebSocketService } from '../../../services/webSocketService/web-socket.service';
+import { catchError, map, of, switchMap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { PlaylistService } from '../../../services/playlistService/playlist.service';
 
@@ -18,12 +17,11 @@ export class GameComponent implements OnInit, OnDestroy {
   artistName: string | null = null;
   currentSecond: number = 20;
   isReveal: boolean = false;
-  isPlaylistSelectorVisible: boolean = false; // Contrôle l'affichage de la sélection des playlists
+  isPlaylistSelectorVisible: boolean = false;
+
   private timerInterval: any = null;
-  private socketSubscription: Subscription | null = null;
 
   constructor(
-    private webSocketService: WebSocketService,
     private cdr: ChangeDetectorRef,
     private http: HttpClient,
     private playlistService: PlaylistService
@@ -31,25 +29,26 @@ export class GameComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.fetchPlaylists();
-    this.webSocketService.connect();
   }
 
   ngOnDestroy() {
     this.clearTimer();
-    this.unsubscribeFromSongUpdates();
   }
 
   fetchPlaylists(): void {
-    this.playlistService.getPlaylists().subscribe({
-      next: (data) => {
-        console.log('Playlists received:', data);
+    this.playlistService
+      .getPlaylists()
+      .pipe(
+        catchError((err) => {
+          console.error('Erreur lors du chargement des playlists :', err);
+          this.blindTestStatus = 'Une erreur est survenue lors du chargement des playlists.';
+          return of([]);
+        })
+      )
+      .subscribe((data) => {
+        console.log('Playlists reçues :', data);
         this.playlists = data;
-      },
-      error: (err) => {
-        this.blindTestStatus = 'Une erreur est survenue lors du chargement des playlists.';
-        console.error(err);
-      },
-    });
+      });
   }
 
   togglePlaylistSelector() {
@@ -58,9 +57,8 @@ export class GameComponent implements OnInit, OnDestroy {
 
   selectPlaylist(playlistId: string) {
     this.playlistId = playlistId;
-    this.blindTestStatus = `Playlist sélectionnée : ${
-      this.playlists.find((p) => p.id === playlistId)?.name || ''
-    }`;
+    const selectedPlaylist = this.playlists.find((p) => p.id === playlistId)?.name || '';
+    this.blindTestStatus = `Playlist sélectionnée : ${selectedPlaylist}`;
   }
 
   startBlindTest() {
@@ -71,91 +69,73 @@ export class GameComponent implements OnInit, OnDestroy {
 
     this.blindTestStatus = 'Récupération de la playlist...';
 
-    // Requête HTTP pour démarrer le blind test
     this.http
-      .get<{ message: string }>(`http://localhost:8080/spotify/blindtest/start?playlistId=${this.playlistId}`)
-      .subscribe(
-        (response) => {
-          console.log('Réponse du backend :', response.message);
-        },
-        (error) => {
-          console.error('Erreur lors de l’appel HTTP :', error);
+      .get<{ playlist: any[] }>(`http://localhost:8080/spotify/blindtest/start?playlistId=${this.playlistId}`)
+      .pipe(
+        map((response) => response.playlist),
+        catchError((err) => {
+          console.error('Erreur lors de la récupération de la playlist :', err);
           this.blindTestStatus = 'Erreur lors de la récupération de la playlist.';
-        }
-      );
-
-    // Connexion WebSocket et abonnement
-    this.webSocketService
-      .connect()
-      .then(() => {
-        console.log('Connexion WebSocket établie, abonnement en cours...');
-        this.webSocketService.subscribe('/topic/playlist', (playlist: any[]) => {
-          if (!playlist || playlist.length === 0) {
-            this.blindTestStatus = 'Aucune chanson trouvée dans la playlist.';
-            return;
-          }
-
+          return of([]);
+        })
+      )
+      .subscribe((playlist) => {
+        if (!playlist || playlist.length === 0) {
+          this.blindTestStatus = 'Aucune chanson trouvée dans la playlist.';
+        } else {
           this.blindTestStatus = 'Blind test démarré !';
           this.startPlayingSongs(playlist);
-        });
-
-        this.webSocketService.sendMessage('/app/blindtest/start', { playlistId: this.playlistId });
-      })
-      .catch((err) => {
-        console.error('Échec de la connexion WebSocket :', err);
-        this.blindTestStatus = 'Impossible de démarrer le blind test. Erreur de connexion WebSocket.';
+        }
       });
   }
 
   private startPlayingSongs(playlist: any[]) {
     let currentIndex = 0;
-  
+
     const playNextSong = () => {
       if (currentIndex >= playlist.length) {
         this.blindTestStatus = 'Blind test terminé.';
-        console.log('Fin du blind test, arrêt de la musique.');
-        this.webSocketService.sendMessage('/app/blindtest/action', { command: 'stop' });
         return;
       }
-  
+
       const song = playlist[currentIndex];
       this.blindTestStatus = `Lecture de la chanson ${currentIndex + 1} / ${playlist.length}`;
-  
-      console.log('Lecture de la chanson : ', song);
-  
-      this.webSocketService.sendMessage('/app/blindtest/action', { command: 'play', songId: song.id });
-  
+      this.sendSongAction('play', song.id);
+
       this.startTimer(20, () => {
-        console.log('Timer terminé, préparation pour le reveal');
-  
-        this.webSocketService.sendMessage('/app/blindtest/action', { command: 'stop', songId: song.id });
-  
+        this.sendSongAction('stop', song.id);
+
         setTimeout(() => {
-          console.log('Reveal de la chanson');
           this.revealSongDetails(song);
-  
+
           setTimeout(() => {
-            console.log('Lecture du refrain');
-            this.webSocketService.sendMessage('/app/blindtest/action', { command: 'playAtRefrain', songId: song.id });
-  
+            this.sendSongAction('playAtRefrain', song.id);
+
             setTimeout(() => {
-              console.log('Passage à la chanson suivante après un délai.');
-              
               currentIndex++;
-  
-              setTimeout(() => {
-                playNextSong(); // Passer à la chanson suivante
-              }, 2000); // 3 secondes de transition entre deux chansons
-  
+              playNextSong();
             }, 15000); // Temps pour le refrain
           }, 1000); // Délai après le reveal
         }, 2000); // Délai avant le reveal
       });
     };
-  
+
     playNextSong();
   }
-  
+
+  private sendSongAction(command: string, songId: string) {
+    this.http
+      .post(`http://localhost:8080/spotify/blindtest/action`, { command, songId })
+      .pipe(
+        catchError((err) => {
+          console.error(`Erreur lors de l'envoi de la commande "${command}" :`, err);
+          return of(null);
+        })
+      )
+      .subscribe(() => {
+        console.log(`Commande "${command}" envoyée pour la chanson ${songId}`);
+      });
+  }
 
   private startTimer(seconds: number, onComplete: () => void) {
     this.clearTimer();
@@ -190,39 +170,21 @@ export class GameComponent implements OnInit, OnDestroy {
     this.blindTestStatus = 'Blind test mis en pause.';
     this.isReveal = false;
     this.clearTimer();
-
-    this.webSocketService.sendMessage('/app/blindtest/pause', { action: 'stop' });
+    this.sendSongAction('pause', this.playlistId);
   }
 
   resumeBlindTest() {
     this.blindTestStatus = 'Blind test repris.';
     this.isReveal = false;
-
-    this.webSocketService.sendMessage('/app/blindtest/resume', { action: 'resume' });
+    this.sendSongAction('resume', this.playlistId);
   }
 
   stopBlindTest() {
-    console.log('Arrêt du blind test.');
-  
     this.blindTestStatus = 'Blind test arrêté.';
     this.isReveal = false;
     this.currentSong = null;
     this.artistName = null;
-  
     this.clearTimer();
-  
-    if (this.webSocketService.isConnected()) {
-      this.webSocketService.sendMessage('/app/blindtest/action', { action: 'stop' });
-      console.log('Message envoyé au backend pour arrêter le blind test.');
-    }
-  
-    this.unsubscribeFromSongUpdates();
-  }
-  private unsubscribeFromSongUpdates() {
-    if (this.socketSubscription) {
-      this.socketSubscription.unsubscribe();
-      this.socketSubscription = null;
-    }
-    this.webSocketService.disconnect();
+    this.sendSongAction('stop', this.playlistId);
   }
 }
