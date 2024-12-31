@@ -5,7 +5,7 @@ import { PlaylistService } from '../../../services/playlistService/playlist.serv
   selector: 'app-playlist',
   standalone: false,
   templateUrl: './playlist.component.html',
-  styleUrls: ['./playlist.component.scss'], // Corrigé 'styleUrl' en 'styleUrls'
+  styleUrl: './playlist.component.scss',
 })
 export class PlaylistComponent implements OnInit {
   @Output() playlistSelected = new EventEmitter<string>();

@@ -1,7 +1,9 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { catchError, map, of, switchMap } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { BlindTestService } from '../../../services/blindTestService/blind-test.service';
+import { TimerService } from '../../../services/timerService/timer.service';
 import { PlaylistService } from '../../../services/playlistService/playlist.service';
+
+
 
 @Component({
   selector: 'app-game',
@@ -12,18 +14,22 @@ import { PlaylistService } from '../../../services/playlistService/playlist.serv
 export class GameComponent implements OnInit, OnDestroy {
   playlistId: string = '';
   blindTestStatus: string = '';
+  revealDuration: number = 15;
+  discoveryDuration: number = 20;
+  pauseBetweenTracks: number = 2;
+
   playlists: { id: string; name: string; banner: string | null }[] = [];
   currentSong: string | null = null;
-  artistName: string | null = null;
-  currentSecond: number = 20;
+  artistNames: string | null = null;
+  currentSecond?: number;
   isReveal: boolean = false;
   isPlaylistSelectorVisible: boolean = false;
 
-  private timerInterval: any = null;
+  private playlist: any[] = [];
 
   constructor(
-    private cdr: ChangeDetectorRef,
-    private http: HttpClient,
+    private blindTestService: BlindTestService,
+    private timerService: TimerService,
     private playlistService: PlaylistService
   ) {}
 
@@ -32,35 +38,30 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.clearTimer();
+    this.timerService.clearTimer();
   }
 
-  fetchPlaylists(): void {
-    this.playlistService
-      .getPlaylists()
-      .pipe(
-        catchError((err) => {
-          console.error('Erreur lors du chargement des playlists :', err);
-          this.blindTestStatus = 'Une erreur est survenue lors du chargement des playlists.';
-          return of([]);
-        })
-      )
-      .subscribe((data) => {
-        console.log('Playlists reçues :', data);
-        this.playlists = data;
-      });
-  }
-
+  /** Affiche ou cache le sélecteur de playlists */
   togglePlaylistSelector() {
     this.isPlaylistSelectorVisible = !this.isPlaylistSelectorVisible;
   }
 
+  /** Récupère les playlists disponibles */
+  fetchPlaylists(): void {
+    this.playlistService.getPlaylists().subscribe(
+      (data) => (this.playlists = data),
+      (err) => (this.blindTestStatus = 'Erreur lors du chargement des playlists.')
+    );
+  }
+
+  /** Sélectionne une playlist spécifique */
   selectPlaylist(playlistId: string) {
     this.playlistId = playlistId;
     const selectedPlaylist = this.playlists.find((p) => p.id === playlistId)?.name || '';
     this.blindTestStatus = `Playlist sélectionnée : ${selectedPlaylist}`;
   }
 
+  /** Démarre le blind test */
   startBlindTest() {
     if (!this.playlistId) {
       this.blindTestStatus = 'Veuillez sélectionner une playlist.';
@@ -69,122 +70,104 @@ export class GameComponent implements OnInit, OnDestroy {
 
     this.blindTestStatus = 'Récupération de la playlist...';
 
-    this.http
-      .get<{ playlist: any[] }>(`http://localhost:8080/spotify/blindtest/start?playlistId=${this.playlistId}`)
-      .pipe(
-        map((response) => response.playlist),
-        catchError((err) => {
-          console.error('Erreur lors de la récupération de la playlist :', err);
-          this.blindTestStatus = 'Erreur lors de la récupération de la playlist.';
-          return of([]);
-        })
-      )
-      .subscribe((playlist) => {
-        if (!playlist || playlist.length === 0) {
-          this.blindTestStatus = 'Aucune chanson trouvée dans la playlist.';
-        } else {
-          this.blindTestStatus = 'Blind test démarré !';
-          this.startPlayingSongs(playlist);
-        }
-      });
+    this.isReveal = false;
+    this.currentSong = null;
+    this.artistNames = null;
+    this.currentSecond = this.discoveryDuration;
+
+    this.blindTestService.startBlindTest(this.playlistId).subscribe((playlist) => {
+      if (!playlist.length) {
+        this.blindTestStatus = 'Aucune chanson trouvée dans la playlist.';
+      } else {
+        this.blindTestStatus = 'Blind test démarré !';
+        this.playlist = playlist;
+        this.playNextSong(0);
+      }
+    });
   }
 
-  private startPlayingSongs(playlist: any[]) {
-    let currentIndex = 0;
-
-    const playNextSong = () => {
-      if (currentIndex >= playlist.length) {
+  /** Lit la prochaine chanson de la playlist */
+  private playNextSong(index: number) {
+    if (index >= this.playlist.length) {
         this.blindTestStatus = 'Blind test terminé.';
         return;
-      }
+    }
 
-      const song = playlist[currentIndex];
-      this.blindTestStatus = `Lecture de la chanson ${currentIndex + 1} / ${playlist.length}`;
-      this.sendSongAction('play', song.id);
+    const song = this.playlist[index];
+    this.blindTestStatus = `Lecture de la chanson ${index + 1} / ${this.playlist.length}`;
 
-      this.startTimer(20, () => {
-        this.sendSongAction('stop', song.id);
-
-        setTimeout(() => {
-          this.revealSongDetails(song);
-
-          setTimeout(() => {
-            this.sendSongAction('playAtRefrain', song.id);
-
-            setTimeout(() => {
-              currentIndex++;
-              playNextSong();
-            }, 15000); // Temps pour le refrain
-          }, 1000); // Délai après le reveal
-        }, 2000); // Délai avant le reveal
-      });
-    };
-
-    playNextSong();
-  }
-
-  private sendSongAction(command: string, songId: string) {
-    this.http
-      .post(`http://localhost:8080/spotify/blindtest/action`, { command, songId })
-      .pipe(
-        catchError((err) => {
-          console.error(`Erreur lors de l'envoi de la commande "${command}" :`, err);
-          return of(null);
-        })
-      )
-      .subscribe(() => {
-        console.log(`Commande "${command}" envoyée pour la chanson ${songId}`);
-      });
-  }
-
-  private startTimer(seconds: number, onComplete: () => void) {
-    this.clearTimer();
-    this.currentSecond = seconds;
     this.isReveal = false;
+    this.currentSong = null;
+    this.artistNames = null;
+    this.currentSecond = this.discoveryDuration;
 
-    this.timerInterval = setInterval(() => {
-      if (this.currentSecond > 0) {
-        this.currentSecond--;
-      } else {
-        this.clearTimer();
-        onComplete();
+    this.blindTestService.sendSongAction('play', song.id).subscribe();
+
+    this.timerService.startTimer(
+      this.discoveryDuration,
+      (remaining) => {
+          this.currentSecond = remaining;
+      },
+      () => {
+          this.blindTestService.sendSongAction('stop', song.id).subscribe();
+          setTimeout(() => {
+              this.revealSongDetails(song, index);
+          }, this.pauseBetweenTracks * 1000);
       }
-      this.cdr.detectChanges();
-    }, 1000);
-  }
+  );
+  
+}
+private revealSongDetails(song: any, index: number) {
+  console.log("Song object:", song);
+  console.log("les artistes : "+song.artistNames);
+  let pauseBetweenTracksMs: number = this.pauseBetweenTracks * 1000;
+    this.isReveal = true;
+    this.currentSong = song.songName || 'Chanson inconnue';
+    this.artistNames = song.artistNames || 'Artistes inconnus';
 
-  private clearTimer() {
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-      this.timerInterval = null;
+    this.currentSecond = this.revealDuration;
+
+    this.blindTestService.sendSongAction('playAtRefrain', song.id).subscribe();
+    this.timerService.startTimer(
+        this.revealDuration,
+        (remaining) => (this.currentSecond = remaining),
+        () => {
+            this.blindTestService.sendSongAction('stop', song.id).subscribe();
+            setTimeout(() => {
+              this.playNextSong(index + 1); 
+          }, pauseBetweenTracksMs);
+        }
+    );
+}
+
+
+
+  /** Met le blind test en pause */
+  pauseBlindTest() {
+    this.blindTestStatus = 'Blind test mis en pause.';
+    if (this.playlistId) {
+      this.blindTestService.sendSongAction('stop', this.playlistId).subscribe();
     }
   }
 
-  private revealSongDetails(song: any) {
-    this.isReveal = true;
-    this.currentSong = song.songName || 'Chanson inconnue';
-    this.artistName = song.artistName || 'Artiste inconnu';
-  }
-
-  pauseBlindTest() {
-    this.blindTestStatus = 'Blind test mis en pause.';
-    this.isReveal = false;
-    this.clearTimer();
-    this.sendSongAction('pause', this.playlistId);
-  }
-
+  /** Reprend le blind test après une pause */
   resumeBlindTest() {
     this.blindTestStatus = 'Blind test repris.';
     this.isReveal = false;
-    this.sendSongAction('resume', this.playlistId);
+    if (this.playlistId) {
+      this.blindTestService.sendSongAction('resume', this.playlistId).subscribe();
+    }
   }
 
+  /** Arrête complètement le blind test */
   stopBlindTest() {
     this.blindTestStatus = 'Blind test arrêté.';
     this.isReveal = false;
     this.currentSong = null;
-    this.artistName = null;
-    this.clearTimer();
-    this.sendSongAction('stop', this.playlistId);
+    this.artistNames = null;
+    this.timerService.clearTimer();
+    if (this.playlistId) {
+      this.blindTestService.sendSongAction('stop', this.playlistId).subscribe();
+    }
   }
 }
