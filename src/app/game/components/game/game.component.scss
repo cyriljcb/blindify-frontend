@@ -67,14 +67,14 @@ label {
   margin: 40px 0;
 
   p {
-    font-size: 36px; /* Texte status agrandi */
+    font-size: 36px; 
     margin: 10px 0;
     color: #999;
   }
 }
 
 .chrono {
-  font-size: 150px; /* Chronomètre bien visible */
+  font-size: 150px;
   font-weight: bold;
   color: #ff5722;
   margin: 40px 0;
@@ -84,13 +84,13 @@ label {
   margin-top: 40px;
 
   h1 {
-    font-size: 70px; /* Titre de la révélation en grand */
+    font-size: 70px;
     color: #4caf50;
     margin-bottom: 20px;
   }
 
   h2 {
-    font-size: 50px; /* Nom de l'artiste en grand */
+    font-size: 50px;
     color: #2196f3;
     margin: 0;
   }
@@ -114,7 +114,7 @@ label {
       border: 3px solid transparent;
       padding: 20px;
       text-align: center;
-      width: 200px; /* Plus grand pour les écrans */
+      width: 200px;
       transition: border-color 0.3s;
       background-color: #2e2e2e;
       border-radius: 10px;
@@ -125,14 +125,14 @@ label {
 
       img.playlist-banner {
         width: 100%;
-        height: 150px; /* Images plus grandes */
+        height: 150px;
         object-fit: cover;
         margin-bottom: 20px;
         border-radius: 10px;
       }
 
       h3 {
-        font-size: 24px; /* Texte des playlists plus grand */
+        font-size: 24px;
         color: #f1f1f1;
       }
     }
@@ -141,8 +141,8 @@ label {
 
 .playlist-selection-toggle button {
   margin-bottom: 30px;
-  padding: 30px 60px; /* Bouton plus large et plus haut */
-  font-size: 32px; /* Texte agrandi */
+  padding: 30px 60px;
+  font-size: 32px;
   cursor: pointer;
   border: none;
   border-radius: 10px;
@@ -156,7 +156,7 @@ label {
 }
 
 .playlist-selection h2 {
-  font-size: 36px; /* Taille du texte du label */
-  color: #fff; /* Couleur blanche */
+  font-size: 36px;
+  color: #fff; 
   margin-bottom: 20px;
 }

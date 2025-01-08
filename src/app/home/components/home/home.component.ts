@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -8,15 +8,22 @@ import { ActivatedRoute } from '@angular/router';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent {//implements OnInit {
-  // token: string | null = null;
+export class HomeComponent implements OnInit {
+  constructor(private route: ActivatedRoute, private router: Router) {}
 
-  // constructor(private route: ActivatedRoute) {}
+  ngOnInit(): void {
+    this.route.queryParams.subscribe((params) => {
+      const token = params['token'];
+      console.log("token : "+token);
+      if (token) {
+        localStorage.setItem('spotify_access_token', token);
+        console.log(localStorage.getItem('spotify_access_token'));
 
-  // ngOnInit(): void {
-  //   this.token = this.route.snapshot.queryParamMap.get('token');
-  //   if (this.token) {
-  //     localStorage.setItem('access_token', this.token);
-  //   }
-  // }
+        this.router.navigate([], {
+          queryParams: {},
+          replaceUrl: true,
+        });
+      }
+    });
+  }
 }

@@ -1,14 +1,17 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { HomeComponent } from './home/components/home/home.component';
+import { AuthGuard } from './guards/auth.guard';
 
 const routes: Routes = [
   { path: 'auth', loadChildren: () => import('./auth/auth.module').then(m => m.AuthModule) },
-  { path: 'playlists', loadChildren: () => import('./playlists/playlists.module').then(m => m.PlaylistsModule) },
-  { path: 'game', loadChildren: () => import('./game/game.module').then(m => m.GameModule) },
-  { path: 'home', component: HomeComponent }, // Page principale après connexion
+  // Routes protégées par le guard
+  { path: 'playlists', loadChildren: () => import('./playlists/playlists.module').then(m => m.PlaylistsModule), canActivate: [AuthGuard] },
+  { path: 'game', loadChildren: () => import('./game/game.module').then(m => m.GameModule), canActivate: [AuthGuard] },
+  { path: 'home', component: HomeComponent },
+  
   //{ path: 'error', component: ErrorComponent }, // Page pour afficher les erreurs
-  { path: '**', redirectTo: '/home' }, // Redirige toutes les routes inconnues
+  { path: '**', redirectTo: '/home' },
 ];
 
 @NgModule({

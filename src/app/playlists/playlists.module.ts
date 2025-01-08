@@ -7,7 +7,7 @@ import { PlaylistComponent } from './components/playlist/playlist.component';
   declarations: [PlaylistComponent],
   imports: [
     CommonModule,
-    PlaylistsRoutingModule, // Import du module de routage
+    PlaylistsRoutingModule,
   ],
 })
 export class PlaylistsModule {}

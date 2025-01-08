@@ -19,8 +19,6 @@ export class BlindTestService {
         map((response) => response.playlist || [])
       );
   }
-  
-  
 
   sendSongAction(command: string, songId: string): Observable<any> {
     return this.http
