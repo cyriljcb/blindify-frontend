@@ -39,11 +39,23 @@
 
   <div class="display">
     <ng-container *ngIf="!isReveal; else revealTemplate">
-      <p class="chrono"><strong>{{ currentSecond }}</strong></p>
+      <div class="timer-container">
+        <div *ngIf="isBlindTestRunning" class="circle-progress">
+          <svg viewBox="0 0 36 36" class="circular-chart">
+            <path
+              class="circle"
+              [attr.stroke-dasharray]="getStrokeDashArray()"
+              d="M18 2a16 16 0 1 1 0 32 16 16 0 1 1 0-32"
+            />
+          </svg>
+        </div>
+        <p class="chrono">{{ currentSecond }}</p>
+      </div>
     </ng-container>
+
     <ng-template #revealTemplate>
       <div class="reveal">
-        <h1>{{ currentSong || '...' }}</h1>
+        <h1>{{ currentSong ||  '...' }}</h1>
         <h2>{{ artistNames || '...' }}</h2>
       </div>
     </ng-template>

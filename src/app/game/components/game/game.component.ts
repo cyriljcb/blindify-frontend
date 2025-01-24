@@ -43,6 +43,13 @@ export class GameComponent implements OnInit, OnDestroy {
     this.timerService.clearTimer();
   }
 
+  getStrokeDashArray() {
+    const progress = ((this.currentSecond||0) / this.discoveryDuration) * 100;
+    const circumference = 2 * Math.PI * 16;
+    return `${(progress * circumference) / 100}, ${circumference}`;
+  }
+  
+
   selectPlaylistAndClose(playlistId: string): void {
     this.selectPlaylist(playlistId); 
     this.isPlaylistSelectorVisible = false; 
