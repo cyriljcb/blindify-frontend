@@ -1,14 +1,17 @@
 <div class="home-container">
-    <header>
-      <h1>Blindify</h1>
-    </header>
-    <main>
-      <p>Bienvenue sur Blindify, votre plateforme de blind test musical !</p>
-      <div class="nav-buttons">
-        <a routerLink="/auth/login" class="button">Se connecter</a>
-        <a routerLink="/playlists" class="button">Explorer les playlists</a>
-        <a routerLink="/game" class="button">Démarrer le blindtest</a>
-      </div>
-    </main>
-  </div>
-  
+  <header>
+    <div class="auth">
+      <a *ngIf="!isLoggedIn" routerLink="/auth/login" class="auth-button">Se connecter</a>
+      <span *ngIf="isLoggedIn" class="welcome-message">Bonjour {{ username }}</span>
+    </div>
+    <h1>Blindify</h1>
+  </header>
+
+  <main>
+    <p>Bienvenue sur Blindify, votre plateforme de blind test musical !</p>
+    <div class="nav-buttons">
+      <a routerLink="/playlists" class="button">Explorer les playlists</a>
+      <a routerLink="/game" class="button">Démarrer le blindtest</a>
+    </div>
+  </main>
+</div>

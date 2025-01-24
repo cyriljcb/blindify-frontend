@@ -1,5 +1,5 @@
 <div class="playlist-container">
-  <h1>Vos Playlists Spotify</h1>
+  <h1>🎵 Vos Playlists Spotify</h1>
 
   <div *ngIf="errorMessage" class="error">
     <p>{{ errorMessage }}</p>
@@ -12,14 +12,16 @@
   <div *ngIf="playlists.length > 0" class="playlist-list">
     <div 
       *ngFor="let playlist of playlists" 
-      class="playlist-item" 
+      class="playlist-card" 
       (click)="selectPlaylist(playlist.id)"
     >
-      <img 
-        [src]="playlist.banner || 'assets/default-banner.jpg'" 
-        alt="{{ playlist.name }}" 
-        class="playlist-image" 
-      />
+      <div class="playlist-image-container">
+        <img 
+          [src]="playlist.banner || 'assets/default-banner.jpg'" 
+          alt="{{ playlist.name }}" 
+          class="playlist-image" 
+        />
+      </div>
       <div class="playlist-info">
         <h2>{{ playlist.name }}</h2>
       </div>

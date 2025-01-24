@@ -24,6 +24,8 @@ export class GameComponent implements OnInit, OnDestroy {
   currentSecond?: number;
   isReveal: boolean = false;
   isPlaylistSelectorVisible: boolean = false;
+  isBlindTestRunning: boolean = false;
+  isPaused: boolean = false;
 
   private playlist: any[] = [];
 
@@ -41,9 +43,17 @@ export class GameComponent implements OnInit, OnDestroy {
     this.timerService.clearTimer();
   }
 
+  selectPlaylistAndClose(playlistId: string): void {
+    this.selectPlaylist(playlistId); 
+    this.isPlaylistSelectorVisible = false; 
+  }
+  
+
   /** Affiche ou cache le sélecteur de playlists */
   togglePlaylistSelector() {
+    
     this.isPlaylistSelectorVisible = !this.isPlaylistSelectorVisible;
+
   }
 
   /** Récupère les playlists disponibles */
@@ -60,6 +70,14 @@ export class GameComponent implements OnInit, OnDestroy {
     const selectedPlaylist = this.playlists.find((p) => p.id === playlistId)?.name || '';
     this.blindTestStatus = `Playlist sélectionnée : ${selectedPlaylist}`;
   }
+  
+  togglePauseResume() {
+    if (this.isPaused) {
+      this.resumeBlindTest();
+    } else {
+      this.pauseBlindTest();
+    }
+  }
 
   /** Démarre le blind test */
   startBlindTest() {
@@ -74,6 +92,9 @@ export class GameComponent implements OnInit, OnDestroy {
     this.currentSong = null;
     this.artistNames = null;
     this.currentSecond = this.discoveryDuration;
+    this.isBlindTestRunning = true;
+    this.isPlaylistSelectorVisible = false;
+    this.isPaused = false;
 
     this.blindTestService.startBlindTest(this.playlistId).subscribe((playlist) => {
       if (!playlist.length) {
@@ -166,6 +187,7 @@ private revealSongDetails(song: any, index: number) {
     this.currentSong = null;
     this.artistNames = null;
     this.timerService.clearTimer();
+    this.isBlindTestRunning = false;
     if (this.playlistId) {
       this.blindTestService.sendSongAction('stop', this.playlistId).subscribe();
     }

@@ -1,6 +1,6 @@
 body {
-  background-color: #121212; /* Couleur de fond sombre pour un écran */
-  color: #fff; /* Texte en blanc pour un bon contraste */
+  background-color: #121212;
+  color: #fff;
   font-family: Arial, sans-serif;
 }
 
@@ -8,21 +8,21 @@ body {
   text-align: center;
   margin: 40px auto;
   padding: 40px;
-  max-width: 90%; 
-  background-color: #1e1e1e; /* Couleur sombre pour éviter la fatigue visuelle */
+  max-width: 90%;
+  background-color: #1e1e1e;
   border-radius: 20px;
   box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.7);
 }
 
 h1 {
-  font-size: 80px; /* Texte très grand pour la lisibilité */
+  font-size: 80px;
   color: #f1f1f1;
   margin-bottom: 40px;
 }
 
 label {
   display: block;
-  font-size: 36px; /* Texte agrandi */
+  font-size: 36px;
   margin-bottom: 20px;
   color: #bbb;
 }
@@ -30,7 +30,7 @@ label {
 .input-field {
   width: 60%;
   padding: 20px;
-  font-size: 28px; /* Texte plus grand */
+  font-size: 28px;
   border: 1px solid #555;
   border-radius: 10px;
   margin-bottom: 30px;
@@ -43,8 +43,8 @@ label {
 
   button {
     margin: 10px 20px;
-    padding: 20px 40px; /* Boutons plus grands */
-    font-size: 28px; /* Texte des boutons agrandi */
+    padding: 20px 40px;
+    font-size: 28px;
     cursor: pointer;
     border: none;
     border-radius: 10px;
@@ -67,7 +67,7 @@ label {
   margin: 40px 0;
 
   p {
-    font-size: 36px; 
+    font-size: 36px;
     margin: 10px 0;
     color: #999;
   }
@@ -106,7 +106,7 @@ label {
   .playlist-list {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center; 
+    justify-content: center;
     gap: 30px;
 
     .playlist-item {
@@ -141,22 +141,84 @@ label {
 
 .playlist-selection-toggle button {
   margin-bottom: 30px;
-  padding: 30px 60px;
-  font-size: 32px;
+  padding: 20px 60px;
+  font-size: 28px;
+  font-weight: bold;
   cursor: pointer;
   border: none;
-  border-radius: 10px;
-  background-color: #28a745;
+  border-radius: 50px;
+  background-color: #1db954;
   color: white;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.2s;
 
   &:hover {
-    background-color: #218838;
+    background-color: #17a447;
+    transform: scale(1.05); 
+  }
+
+  &:active {
+    background-color: #128b34;
+    transform: scale(0.95);
   }
 }
 
 .playlist-selection h2 {
   font-size: 36px;
-  color: #fff; 
+  color: #fff;
   margin-bottom: 20px;
 }
+
+.control-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
+  background-color: #1e1e1e;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+
+  button {
+    background: none;
+    border: none;
+    font-size: 36px;
+    color: #fff;
+    margin: 0 20px;
+    cursor: pointer;
+    transition: color 0.3s;
+
+    &:hover {
+      color: #6200ea;
+    }
+
+    &:disabled {
+      color: #555;
+      cursor: not-allowed;
+    }
+  }
+}
+.start-button button {
+  padding: 20px 60px;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  border-radius: 50px;
+  background-color: #1db954; 
+  color: white;
+  transition: background-color 0.3s, transform 0.2s;
+
+  &:hover {
+    background-color: #17a447;
+    transform: scale(1.05);
+  }
+
+  &:active {
+    background-color: #128b34;
+    transform: scale(0.95);
+  }
+}
+
+

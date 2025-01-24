@@ -1,23 +1,22 @@
-<div class="game-container animated-background">
-  <h1>Blindtest 🎵</h1>
+<div class="game-container">
+  <h1>🎵 Blindtest</h1>
 
-  <div class="playlist-selection-toggle">
+  <div *ngIf="!isBlindTestRunning" class="playlist-selection-toggle">
     <button (click)="togglePlaylistSelector()">
-      {{ isPlaylistSelectorVisible ? 'Fermer la sélection de playlist' : 'Choisir une playlist' }}
+      {{ isPlaylistSelectorVisible ? 'Fermer' : 'Choisir une playlist' }}
     </button>
-  </div>
+  </div>  
 
   <div
     class="playlist-selection"
     *ngIf="isPlaylistSelectorVisible"
   >
-    <h2>Choisissez une playlist :</h2>
-
+    <h2>Choisissez une playlist</h2>
     <div class="playlist-list">
       <div
         *ngFor="let playlist of playlists"
         class="playlist-item"
-        (click)="selectPlaylist(playlist.id)"
+        (click)="selectPlaylistAndClose(playlist.id)"
         [class.selected]="playlist.id === playlistId"
       >
         <img
@@ -29,16 +28,13 @@
       </div>
     </div>
   </div>
-
-  <div class="actions">
-    <button (click)="startBlindTest()">Démarrer</button>
-    <button (click)="pauseBlindTest()">Mettre en pause</button>
-    <button (click)="resumeBlindTest()">Reprendre</button>
-    <button (click)="stopBlindTest()">Arrêter</button>
-  </div>
-
+  
   <div class="status">
     <p><strong>Statut :</strong> {{ blindTestStatus }}</p>
+  </div>
+  
+  <div *ngIf="!isBlindTestRunning" class="start-button">
+    <button (click)="startBlindTest()">Lancer le Blindtest</button>
   </div>
 
   <div class="display">
@@ -52,4 +48,13 @@
       </div>
     </ng-template>
   </div>
+
+  <div *ngIf="isBlindTestRunning" class="control-bar">
+    <button (click)="togglePauseResume()">
+      <span *ngIf="isPaused">▶️</span>
+      <span *ngIf="!isPaused">⏸️</span>
+    </button>
+    <button (click)="stopBlindTest()">⏹️</button>
+  </div>
+  
 </div>
